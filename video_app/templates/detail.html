@@ -1,0 +1,86 @@
+
+{% extends "base.html" %}
+
+{% block title %}{{ video.title }}{% endblock %}
+
+{% block content %}
+<h1>{{ video.title }}</h1>
+<p>{{ video.description }}</p>
+<div class="video-container">
+    <video id="custom-video" width="100%" height="auto">
+        <source src="{{ video.video_file.url }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <div class="custom-controls">
+        <button onclick="playPause()">Play/Pause</button>
+        <button onclick="stopVideo()">Stop</button>
+        <button onclick="muteUnmute()">Mute/Unmute</button>
+        <span id="current-time">0:00</span> / <span id="duration">0:00</span>
+    </div>
+</div>
+<hr>
+<div>
+    <a href="{% url 'like_video' video.id %}">
+        {% if is_liked %}
+        Unlike
+        {% else %}
+        Like
+        {% endif %}
+    </a>
+    ({{ total_likes }} likes)
+</div>
+<hr>
+<h2>Comments</h2>
+{% for comment in comments %}
+<div>
+    <p><strong>{{ comment.user.username }}</strong>: {{ comment.text }}</p>
+    <p><small>{{ comment.created_at }}</small></p>
+</div>
+<hr>
+{% endfor %}
+<h3>Add a new comment</h3>
+{% if user.is_authenticated %}
+<form method="post">
+    {% csrf_token %}
+    {{ comment_form.as_p }}
+    <button type="submit" class="btn btn-primary">Add comment</button>
+</form>
+{% else %}
+{% endif %}
+<script>
+    var video = document.getElementById("custom-video");
+    var currentTimeDisplay = document.getElementById("current-time");
+    var durationDisplay = document.getElementById("duration");
+
+    video.onloadedmetadata = function() {
+        durationDisplay.textContent = formatTime(video.duration);
+    };
+
+    video.ontimeupdate = function() {
+        currentTimeDisplay.textContent = formatTime(video.currentTime);
+    };
+
+    function playPause() {
+        if (video.paused) {
+            video.play();
+        } else {
+            video.pause();
+        }
+    }
+
+    function stopVideo() {
+        video.pause();
+        video.currentTime = 0;
+    }
+
+    function muteUnmute() {
+        video.muted = !video.muted;
+    }
+
+    function formatTime(seconds) {
+        var minutes = Math.floor(seconds / 60);
+        var seconds = Math.floor(seconds % 60);
+        return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+    }
+</script>
+{% endblock %}
